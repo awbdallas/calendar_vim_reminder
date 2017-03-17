@@ -1,7 +1,9 @@
-import os
 import sys
+import os
+import datetime
 
 from ast import literal_eval
+from dateutil import parser
 
 
 class CalendarVimParser():
@@ -57,13 +59,16 @@ class CalendarVimParser():
             # grabbed from: http://stackoverflow.com/a/19587581
             for subdir, dirs, files in os.walk(calendar_path):
                 for file in files:
-                    with open(os.path.join(subdir, file)) as fh:
+                    with open(os.path.join(subdir, file), 'r') as fh:
                         result = fh.read()
 
                     try:
                         events_dict = literal_eval(result)
                     except:
-                        print('Error parsing events')
+                        print('Error parsing events on file {}'.fomrat(
+                            os.path.join(subdir, file)
+                        ))
+                        sys.exit(0)
 
                     for event in events_dict['items']:
                         calendar.add_event(event)
@@ -80,12 +85,38 @@ class Calendar():
 
     def add_event(self, setup_dict):
         self.events.append(Events(setup_dict))
-        
+
+    # get events for a day
+    def get_events_for_today(self):
+        comparing_date = datetime.date.today()
+        returning_events = []
+
+        for event in self.events:
+            holding = datetime.date(event.start.year, event.start.month,
+                                    event.start.day)
+            if holding == comparing_date:
+                returning_events.append(event)
+
+        return returning_events
+
 
 class Events():
     """Calendar events for calendar.vim."""
 
     def __init__(self, setup_dict):
         # yeah, probably still a bad idea
+        required_keys = ['id', 'summary', 'end', 'start']
+        for key in required_keys:
+            if not setup_dict.get(key, None):
+                print('Events not setup correct')
+                sys.exit(0)
+
         for key in setup_dict:
-            setattr(self, key, setup_dict[key])
+            if key == 'start' or key == 'end':
+                if setup_dict[key].get('date', None):
+                    setattr(self, key, parser.parse(setup_dict[key]['date']))
+                elif setup_dict[key].get('dateTime', None):
+                    setattr(self, key,
+                            parser.parse(setup_dict[key]['dateTime']))
+            else:
+                setattr(self, key, setup_dict[key])
