@@ -1,15 +1,67 @@
-import calendarvim
+# import calendarvim
+import os
 import sys
+import smtplib
+import ConfigParser
 
 
 def main():
-    filepath = sys.argv[1]
-    print(filepath)
-    holding = calendarvim.CalendarVimParser(filepath)
-    result = holding.load_calendar()
+    config_options = get_config_options()
+    # holding = calendarvim.CalendarVimParser(
+    # config_options['main']['calendar_folder'])
+    # calendars = holding.load_calendar()
 
-    for calendar in result:
-        print(calendar.events)
+    send_email(config_options, 'hello world')
+
+
+def get_config_options():
+    config_file = os.getcwd() + '/config_file.config'
+
+    if not os.path.isfile(config_file):
+        print('No config file set in cwd')
+        sys.exit(0)
+
+    config = ConfigParser.ConfigParser()
+    config.read(config_file)
+
+    return config
+
+
+# I used ses(aws). grabbed the guiddeee from here.
+# http://blog.noenieto.com/2012/06/19/using_amazon_ses_with_your_python_applications.html
+def send_email(config, message):
+    needed_keys = ['smtp_server', 'smtp_username', 'smtp_password',
+                   'smtp_port', 'smtp_tls', 'toaddr', 'fromaddr']
+    # I, uh, kinda need these
+    for key in needed_keys:
+        try:
+            config.get('Main', key)
+        except ConfigParser.NoOptionError:
+            print('Config options for email not set: {}'.format(key))
+            sys.exit(0)
+
+    smtp_server = smtplib.SMTP(
+        host=config.get('Main', 'smtp_server'),
+        port=config.get('Main', 'smtp_port'),
+        timeout=10
+    )
+
+    # TODO: take off when done with testing
+    # smtp_server.set_debuglevel(10)
+    smtp_server.starttls()
+    smtp_server.ehlo()
+    smtp_server.login(config.get('Main', 'smtp_username'),
+                      config.get('Main', 'smtp_password'))
+
+    message = 'From: {}\r\nTo: {}\r\n\r\n{}'.format(
+            config.get('Main', 'fromaddr'),
+            config.get('Main', 'toaddr'),
+            message)
+
+    smtp_server.sendmail(config.get('Main', 'fromaddr'),
+                         config.get('Main', 'toaddr'),
+                         message)
+    smtp_server.quit()
 
 if __name__ == '__main__':
     main()

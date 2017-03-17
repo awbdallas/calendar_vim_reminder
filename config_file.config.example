@@ -1,2 +1,9 @@
 [Main]
 calendar_folder=
+toaddr=
+fromaddr=
+smtp_server=
+smtp_username=
+smtp_password=
+smtp_port=
+smtp_tls=
