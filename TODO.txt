@@ -1,15 +1,5 @@
-I'm trying to get in the habit of planning out code more
-
-Here's a rough level of steps I'm planning to do
-
-1) Figure out how to get events
-2) Figure up how to schedule reminders (just check events every hour is best atm)
-        - Switching it to just a daily email i think
-3) Figure out how to send emails
-4) Tidy  up the code. Kinda messy and needs docstring stuff
-
-
-without a doubt this will change, but overall it will hopefully stay the same
-
-
-
+Current Todo:
+Organize config
+CLI options
+Option to send sms?
+Maybe event forecasting? 

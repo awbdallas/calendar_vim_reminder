@@ -5,6 +5,7 @@ import os
 import sys
 import smtplib
 import configparser
+import datetime
 
 
 def main():
@@ -76,8 +77,9 @@ def send_email(config, message):
     smtp_server.login(config.get('Main', 'smtp_username'),
                       config.get('Main', 'smtp_password'))
 
-    message = 'From: {}\r\nTo: {}\r\n\r\n{}'.format(
+    message = 'From: {}\r\nSubject: {}\r\nTo: {}\r\n\r\n{}'.format(
             config.get('Main', 'fromaddr'),
+            "Calendar Reminder for {}".format(datetime.date.today()),
             config.get('Main', 'toaddr'),
             message)
 
