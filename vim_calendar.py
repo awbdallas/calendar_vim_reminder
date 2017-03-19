@@ -1,19 +1,29 @@
 #!/usr/bin/env python3
 
-import lib.calendarvim as calendarvim
-import os
-import sys
-import smtplib
 import configparser
 import datetime
+import os
+import smtplib
+import sys
+import lib.calendarvim as calendarvim
+
+from argparse import ArgumentParser
 
 
 def main():
+    parser = ArgumentParser()
+    parser.add_argument('--reminder_email', help='Send Reminder Email', 
+            action='store_true', default=False)
+    args = parser.parse_args()
     config_options = get_config_options()
     calendar = calendarvim.CalendarVim(
         config_options['Main']['calendar_folder']
     )
-    send_reminder_email(calendar, config_options)
+
+    if args.reminder_email:
+        send_reminder_email(calendar, config_options)
+    else:
+        print("No options were added")
 
 
 def send_reminder_email(calendar, config_options):
@@ -43,7 +53,8 @@ Here are a list of your calendars and events scheduled for today.\n\n
 
 
 def get_config_options():
-    config_file = os.getcwd() + '/config_file.config'
+    file_dir, _ = os.path.split(os.path.abspath(__file__))
+    config_file = file_dir + '/config_file.config'
 
     if not os.path.isfile(config_file):
         print('No config file set in cwd')
