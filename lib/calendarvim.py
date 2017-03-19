@@ -6,8 +6,9 @@ from ast import literal_eval
 from dateutil import parser
 
 
-class CalendarVimParser():
+class CalendarVim():
     """ Used for parsing calendar.vim directories """
+
     def __init__(self, calendar_folder_path):
         if not os.path.exists(calendar_folder_path):
             print('Calendar folder does not exist')
@@ -15,6 +16,7 @@ class CalendarVimParser():
         else:
             self.calendar_folder = calendar_folder_path
             self.calendars = []
+            self.load_calendar()
 
     def load_calendar(self):
         """
@@ -45,7 +47,6 @@ class CalendarVimParser():
             self.calendars.append(Calendar(calendar))
 
         self.populate_calendars()
-        return self.calendars
 
     def populate_calendars(self):
         if len(self.calendars) == 0:
@@ -73,6 +74,14 @@ class CalendarVimParser():
                     for event in events_dict['items']:
                         calendar.add_event(event)
 
+    def get_events_for_day(self, day):
+        holding_dict = {}
+
+        for calendar in self.calendars:
+            holding_dict[calendar] = calendar.get_events_for_day(day)
+            
+        return holding_dict
+
 
 class Calendar():
     """Calendars for calendar.vim."""
@@ -87,14 +96,13 @@ class Calendar():
         self.events.append(Events(setup_dict))
 
     # get events for a day
-    def get_events_for_today(self):
-        comparing_date = datetime.date.today()
+    def get_events_for_day(self, day):
         returning_events = []
 
         for event in self.events:
             holding = datetime.date(event.start.year, event.start.month,
                                     event.start.day)
-            if holding == comparing_date:
+            if holding == day:
                 returning_events.append(event)
 
         return returning_events

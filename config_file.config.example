@@ -5,5 +5,5 @@ fromaddr=
 smtp_server=
 smtp_username=
 smtp_password=
-smtp_port=
-smtp_tls=
+smtp_port=587
+smtp_tls=True

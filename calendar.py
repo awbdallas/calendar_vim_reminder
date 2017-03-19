@@ -1,6 +1,6 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
-import calendarvim
+import lib.calendarvim as calendarvim
 import os
 import sys
 import smtplib
@@ -10,31 +10,35 @@ import datetime
 
 def main():
     config_options = get_config_options()
-    calendar_parser = calendarvim.CalendarVimParser(
+    calendar = calendarvim.CalendarVim(
         config_options['Main']['calendar_folder']
     )
-    calendars = calendar_parser.load_calendar()
-    msg = email_from_events(calendars)
+    send_reminder_email(calendar, config_options)
 
+
+def send_reminder_email(calendar, config_options):
+    today = datetime.date.today()
+    calendar_events = calendar.get_events_for_day(today)
+    msg = email_from_events(calendar_events)
     send_email(config_options, msg)
 
 
-def email_from_events(calendars):
+def email_from_events(calendar_events):
     msg = """\
 Hello,
 
 Here are a list of your calendars and events scheduled for today.\n\n
 """
-
-    for calendar in calendars:
-        calendar_events = calendar.get_events_for_today()
-        if len(calendar_events) == 0:
+    
+    for calendar in calendar_events:
+        if len(calendar_events[calendar]) == 0:
             continue
         msg += '{}:\n'.format(calendar.summary)
-        for event in calendar_events:
+
+        for event in calendar_events[calendar]:
             msg += event.summary + '\n'
-             
         msg += '\n'
+
     return msg
 
 
