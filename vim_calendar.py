@@ -8,6 +8,9 @@ import sys
 import lib.calendarvim as calendarvim
 
 from argparse import ArgumentParser
+from tabulate import tabulate
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 
 def main():
@@ -34,21 +37,37 @@ def send_reminder_email(calendar, config_options):
 
 
 def email_from_events(calendar_events):
-    msg = """\
-Hello,
-
-Here are a list of your calendars and events scheduled for today.\n\n
-"""
+    table_headers = ['Calendar', 'Event', 'Time Start', 'Time End']
+    table_data = []
     
     for calendar in calendar_events:
         if len(calendar_events[calendar]) == 0:
             continue
-        msg += '{}:\n'.format(calendar.summary)
-
         for event in calendar_events[calendar]:
-            msg += event.summary + '\n'
-        msg += '\n'
+            start_time = "{:02d}:{:02d}".format(event.start.hour, event.start.second)
+            end_time = "{:02d}:{:02d}".format(event.end.hour, event.end.second)
+            table_data.append([
+                calendar.summary,
+                event.summary,
+                start_time,
+                end_time
+           ])
 
+    msg = """\
+<html>
+    <head></heady>
+    <body>
+Hello,
+
+Here are a list of your calendars and events scheduled for today.
+<br />
+<br />
+
+
+{}
+    </body>
+</html>
+""".format(tabulate(table_data, table_headers, tablefmt="html"))
     return msg
 
 
@@ -91,16 +110,16 @@ def send_email(config, message):
     smtp_server.ehlo()
     smtp_server.login(config.get('Main', 'smtp_username'),
                       config.get('Main', 'smtp_password'))
-
-    message = 'From: {}\r\nSubject: {}\r\nTo: {}\r\n\r\n{}'.format(
-            config.get('Main', 'fromaddr'),
-            "Calendar Reminder for {}".format(datetime.date.today()),
-            config.get('Main', 'toaddr'),
-            message)
+    
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = "Calendar Reminder for {}".format(datetime.date.today())
+    msg['From'] = config.get('Main', 'fromaddr')
+    msg['To'] = config.get('Main', 'toaddr')
+    msg.attach(MIMEText(message, 'html'))
 
     smtp_server.sendmail(config.get('Main', 'fromaddr'),
                          config.get('Main', 'toaddr'),
-                         message)
+                         msg.as_string())
     smtp_server.quit()
 
 if __name__ == '__main__':

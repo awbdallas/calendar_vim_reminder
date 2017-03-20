@@ -100,9 +100,11 @@ class Calendar():
         returning_events = []
 
         for event in self.events:
-            holding = datetime.date(event.start.year, event.start.month,
+            start = datetime.date(event.start.year, event.start.month,
                                     event.start.day)
-            if holding == day:
+            end = datetime.date(event.end.year, event.end.month,
+                                event.end.day)
+            if day >= start and day <= end:
                 returning_events.append(event)
 
         return returning_events
